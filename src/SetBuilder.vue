@@ -14,7 +14,7 @@ import StandardSetBuilder from './components/standard-set-builder/standard-set-b
 export default {
   name: 'SetBuilder',
   components: {
-    StandardSetBuilder: StandardSetBuilder
+    StandardSetBuilder
   }
 }
 </script>
