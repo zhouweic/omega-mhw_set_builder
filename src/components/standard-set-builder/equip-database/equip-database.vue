@@ -1,10 +1,10 @@
 <template>
-<el-tabs type="border-card" value="armors">
+<el-tabs type="border-card" :value="tabSelect">
   <el-tab-pane label="武器" name="weapons" />
   <el-tab-pane label="防具" name="armors">
     <el-row :gutter="20">
       <el-col :span="8">
-        <el-table :data="equipList" height="calc(100vh - 200px)">
+        <el-table :data="equipList" :height="tableHeight">
           <el-table-column label="装备组" prop="name" width="120px" />
           <el-table-column label="装备部位">
             <template slot-scope="scope">
@@ -23,7 +23,7 @@
         </el-table>
       </el-col>
       <el-col :span="16">
-        <el-card class="box-card" height="calc(100vh - 200px)">
+        <el-card class="box-card" :height="tableHeight">
           <div slot="header" class="clearfix">
             <span>装备详情</span>
           </div>
@@ -58,20 +58,62 @@
       </el-col>
     </el-row>
   </el-tab-pane>
-  <el-tab-pane label="护石" name="stones" />
-  <el-tab-pane label="珠子" name="jewels" />
+  <el-tab-pane label="护石" name="charms">
+    <el-table :data="charmList" :height="tableHeight" :row-class-name="({row, rowIndex}) => row.color">
+      <el-table-column type="index" />
+      <el-table-column label="护石" prop="name" />
+      <el-table-column label="技能（技能最高等级）" sortable :sort-method="(a, b) => getSkillMaxLevel(a.skills[0].name) - getSkillMaxLevel(b.skills[0].name)">
+        <template slot-scope="scope">
+          <div v-for="skill in scope.row.skills" :key="skill.name">
+            {{ `${skill.name}（${getSkillMaxLevel(skill.name)}）` }}
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="最高强化等级" prop="skills[0].level" sortable />
+    </el-table>
+  </el-tab-pane>
+  <el-tab-pane label="珠子" name="jewels">
+    <el-table :data="jewelList" :height="tableHeight">
+      <el-table-column type="index" />
+      <el-table-column label="装饰珠" prop="name" />
+      <el-table-column label="镶嵌等级" prop="slot" sortable />
+      <el-table-column label="稀有度" prop="rare" sortable />
+      <el-table-column label="对应技能" prop="skill" />
+      <el-table-column label="技能最高等级" prop="maxLevel" sortable />
+    </el-table>
+  </el-tab-pane>
   <el-tab-pane label="套装效果" name="suits" />
-  <el-tab-pane label="技能" name="skills" />
+  <el-tab-pane label="技能" name="skills">
+    <el-table :data="skillList" :height="tableHeight">
+      <el-table-column type="index" />
+      <el-table-column label="技能名称" prop="name" />
+      <el-table-column label="技能最高等级" prop="maxLevel" sortable />
+      <el-table-column label="效果（仅包含影响攻击和会心的效果）">
+        <template slot-scope="scope" v-if="scope.row.effects">
+          <div v-for="effect in scope.row.effects" :key="effect.level">
+            <div>{{ `${effect.level}级${effect.effect.attack ? ` 攻击 +${effect.effect.attack}` : ''}${effect.effect.affinity ? ` 会心率 +${effect.effect.affinity}%` : ''}` }}</div>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+  </el-tab-pane>
 </el-tabs>
 </template>
 
 <script>
-import data from '@/assets/database/mhw-omega.json'
+import database from '@/assets/database/mhw-omega.json'
+import { getSkillMaxLevel, makeJewel, makeCharm } from '../utils/data-builder'
+
 export default {
   name: 'EquipDatabase',
   data: function () {
     return {
-      equipList: data.armors,
+      tabSelect: 'armors',
+      tableHeight: 'calc(100vh - 200px)',
+      equipList: database.armors,
+      jewelList: makeJewel(3),
+      charmList: makeCharm(),
+      skillList: database.skills,
       selectedItem: undefined
     }
   },
@@ -84,7 +126,26 @@ export default {
       if (row.skill !== undefined) {
         this.selectedItem.skill = row.skill
       }
+    },
+    getSkillMaxLevel: function (skill) {
+      return getSkillMaxLevel(skill)
     }
   }
 }
 </script>
+
+<style lang="stylus">
+.el-table tr
+  &.米黄
+    color #9CBB2B
+  &.浅绿
+    color #409D41
+  &.深绿
+    color #7496A3
+  &.深紫
+    color #5B6EEE
+  &.浅紫
+    color #A661E3
+  &.橙黄
+    color #F78A5B
+</style>
